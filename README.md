@@ -22,7 +22,7 @@ if (self.cam)
 ```
 hrscope-plugin.qc  //HorrorScope
 client.qc  
-```  
+```
 
 4. Create 'autoexec.cfg' in your mod folder and add line  
 ```
@@ -30,3 +30,10 @@ sv_protocol 999
 ```
 
 5. Compile with [FTEQCC](https://fte.triptohell.info/downloads)
+
+
+
+### Concept
+I wanted a system for easily moving the players view to another entity and back again on demand.
+I can imagine this plugin might be used to create in-game cutscenes and for making interesting demos or trailers.
+

@@ -6,7 +6,7 @@ into an existing mod to implement TV style cameras.
  
 Tested with Quakespasm, QSS, Ironwail
 
-[![Watch the video](https://postimg.cc/14jdGpPB)](https://youtu.be/ko0owPH76PE)
+[![Watch the video](https://i.postimg.cc/FsrQQZBM/cover.jpg)](https://youtu.be/ko0owPH76PE)
 
 ### To install
 1. Copy 'hrscope-plugin.qc' to your mod source code directory alongside 'weapons.qc'
@@ -21,7 +21,7 @@ if (self.cam)
 3. Add line to 'progs.src' above 'combat.qc'
 ```
 hrscope-plugin.qc  //HorrorScope
-client.qc  
+combat.qc  
 ```
 
 4. Create 'autoexec.cfg' in your mod folder and add line  

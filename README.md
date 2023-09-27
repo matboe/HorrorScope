@@ -6,7 +6,7 @@ into an existing mod to implement TV style cameras.
  
 Tested with Quakespasm, QSS, Ironwail
 
-[![Watch the video](https://picsur.org/i/a4085693-da06-4097-90fc-f39b636a15b2.jpg)](https://youtu.be/ko0owPH76PE)
+[![Watch the video](https://postimg.cc/14jdGpPB)](https://youtu.be/ko0owPH76PE)
 
 ### To install
 1. Copy 'hrscope-plugin.qc' to your mod source code directory alongside 'weapons.qc'

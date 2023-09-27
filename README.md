@@ -1,12 +1,10 @@
 # HorrorScope  
-**ON THE FLY CAMERAS MOD FOR CLASSIC QUAKE**
+**On the Fly Cameras Plugin For Classic Quake Mods**
 
 This is a compact plugin version that is condensed into one .qc file and is designed to be simple to drop 
 into an existing mod to implement TV style cameras.
  
 Tested with Quakespasm, QSS, Ironwail
-
-[![Watch the video](https://i.postimg.cc/FsrQQZBM/cover.jpg)](https://youtu.be/ko0owPH76PE)
 
 ### To install
 1. Copy 'hrscope-plugin.qc' to your mod source code directory alongside 'weapons.qc'
@@ -30,7 +28,6 @@ sv_protocol 999
 ```
 
 5. Compile with [FTEQCC](https://fte.triptohell.info/downloads)
-
 
 
 ### Concept

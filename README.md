@@ -1,8 +1,9 @@
 # HorrorScope  
 **On the Fly Cameras Plugin For Classic Quake Mods**
 
-This is a compact plugin version that is condensed into one .qc file and is designed to be simple to drop 
+This is a compact plugin version of HorrorScope Cameras Mod condensed into one .qc file and is designed to be simple to drop 
 into an existing mod to implement TV style cameras.
+There is only one baisc camera included with this condensed version, however you can directly copy & paste camera code from the cameras section in this repo.
  
 Tested with Quakespasm, QSS, Ironwail
 

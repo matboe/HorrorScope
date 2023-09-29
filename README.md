@@ -3,7 +3,7 @@
 
 This is a compact plugin version of HorrorScope Cameras Mod condensed into one .qc file and is designed to be simple to drop 
 into an existing mod to implement TV style cameras.
-There is only one baisc camera included with this condensed version, however you can directly copy & paste camera code from the cameras section in this repo.
+There is only one baisc camera included with this condensed version, however you can directly copy & paste code from the cameras and examples section in this repo.
  
 Tested with Quakespasm, QSS, Ironwail
 

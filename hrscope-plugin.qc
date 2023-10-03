@@ -45,7 +45,7 @@
   if (self.impule == 100)
 	HorrorScope (camera_example1);
 
-  HorroScope will run camera_default if none is specified.
+  HorrorScope will run camera_default if none is specified.
 
 
   -You must specify .aiment! A cameras .aiment is its target 

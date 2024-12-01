@@ -1,4 +1,4 @@
-//camera_static.qc
+//camera_sports.qc
 /*======================================================================
  STATIC CAMERA
 
@@ -16,7 +16,6 @@
 
 //PROTOTYPES
 void() camera_static;
-void() camera_static_setup;
 void() camera_static_think;
 
 //===================================================
@@ -26,36 +25,25 @@ void() camera_static =
 {	
 	hr_print ("Static camera");
 
-	//check camera has a target
-	if (!self.aiment)
-		self.aiment = hr_findtarget();
+	//setup camera
+	self.shot_time = time + 7;
+
+	//stop camera movement
+	self.velocity = '0 0 0'; 	
+	self.avelocity = '0 0 0'; 
+
+	set_FOV (90);
 
 	//camera position 
 	self.camera_spot = calc_camera_spot (self.aiment);
-
-	//snap camera angles to face .aiment
-	camera_snap ((self.aiment.origin + self.aiment.view_ofs) - self.camera_spot);
-
-	//wait until next frame
-	self.nextthink = time;
-	self.think = camera_static_setup;
-};
-
-//============================================
-// Setup camera at .camera_spot and run camera
-//============================================
-void() camera_static_setup =
-{
-	set_FOV (90);
-
-	//setup camera
 	setorigin (self, self.camera_spot);
-	self.shot_time = time + 7;
-	self.velocity = '0 0 0'; 	//stop camera movement
 
 	//update player
 	setorigin (self.owner, self.origin);
 	self.owner.velocity = '0 0 0';
+
+	//snap camera angles to face .aiment
+	camera_snap ((self.aiment.origin + self.aiment.view_ofs) - self.camera_spot);
 
 	camera_static_think();
 };

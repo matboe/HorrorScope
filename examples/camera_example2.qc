@@ -12,7 +12,6 @@
 
 //PROTOTYPES
 void() camera_example2;
-void() camera_example2_setup;
 void() camera_example2_think;
 
 //===================================================
@@ -20,34 +19,24 @@ void() camera_example2_think;
 //===================================================
 void() camera_example2 =
 {	
-	local vector 	vec;
+	vector 	vec;
 
 	hr_print ("Example camera 2\n");
 
 	//find a position for camera
 	self.camera_spot = calc_camera_spot (self.aiment);	
+	setorigin (self, self.camera_spot);
 
 	//snap camera angles to face .aiment
 	vec = (self.aiment.origin + self.aiment.view_ofs - self.camera_spot);
 	camera_snap(vec);
 
-	//wait until next frame
-	self.nextthink = time;
-	self.think = camera_example2_setup;
-};
-
-//============================================
-// Setup camera at .camera_spot and run camera
-//============================================
-void() camera_example2_setup =
-{
 	//setup camera
-	setorigin (self, self.camera_spot);
-	self.shot_time = time + 4;
+	self.shot_time = time + 4;	//max shot time
 	self.velocity = '0 0 0'; 
 
-	//update player
-	setorigin (self.owner, cam_pos);
+	//update player position and velocity to match camera
+	setorigin (self.owner, self.camera_spot);
 	self.owner.velocity = '0 0 0';
 
 	camera_example2_think();
@@ -59,6 +48,7 @@ void() camera_example2_setup =
 //==================================================
 void() camera_example2_think  =
 {	
+	// go to next camera position when aiment is out of frame or shot_time expires
 	if ( !hr_infront(self, self.aiment) || !hr_visible(self.aiment.origin) || self.shot_time < time )
 	{
 		//go to next cam position		

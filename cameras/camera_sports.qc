@@ -12,7 +12,6 @@
 
 // PROTOTYPES
 void() camera_sports;
-void() camera_sports_setup;
 void() camera_sports_think;
 
 //================================================
@@ -22,7 +21,7 @@ void() camera_sports_think;
 //================================================
 void() adjust_fov =
 {
-	local float 	dist, current, ideal;
+	float 	dist, current, ideal;
 
 	
 	//measure distance camera --> aiment
@@ -31,7 +30,6 @@ void() adjust_fov =
 
 	//cap dist value
 	if (dist > 120) dist = 120;
-//	if (dist < 1) dist = 1;
 
 	//find current fov setting
 	current = cvar ("fov");
@@ -63,32 +61,20 @@ void() camera_sports =
 	//camera position 
 	self.camera_spot = calc_camera_spot (self.aiment);
 
-	//snap camera angles to face .aiment
-	camera_snap ((self.aiment.origin + self.aiment.view_ofs) - self.camera_spot);
-
-	//wait until next frame
-	self.nextthink = time;
-	self.think = camera_sports_setup;
-};
-
-
-//============================================
-// Setup camera at .camera_spot and run camera
-//============================================
-void() camera_sports_setup  =
-{	
 	//setup camera
 	setorigin (self, self.camera_spot);
 	self.shot_time = time + 7;
 	self.velocity = '0 0 0';	//stop camera movement
-	
+
+	//snap camera angles to face .aiment
+	camera_snap ((self.aiment.origin + self.aiment.view_ofs) - self.camera_spot);
+
 	//setup player
 	setorigin (self.owner, self.origin);
 	self.owner.velocity = self.velocity;
 
 	camera_sports_think();
 };
-
 
 //==================================================
 // Check for aiment out of shot or shot_time expired
@@ -107,7 +93,7 @@ void() camera_sports_think  =
 	}
 
 	//update camera angles
-	camera_update_angles(self.aiment, 2);				
+	camera_update_angles(2);				
 
 	//increment FOV accoring to camera distance from .aiment
 	adjust_fov();

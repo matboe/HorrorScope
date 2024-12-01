@@ -11,11 +11,11 @@
 ===========================================================*/
 
 //NEW FIELD
+.float lefty;
 .float lefty_time;
 
 //PROTOTYPES
 void() camera_follow_plyr;
-void() camera_follow_plyr_setup;
 void() camera_follow_plyr_think;
 
 //==================================================
@@ -23,7 +23,7 @@ void() camera_follow_plyr_think;
 //==================================================
 void() camera_follow_plyr =
 {
-	local entity 	plyr;
+	entity 	plyr;
 
 
 	//find player
@@ -42,30 +42,26 @@ void() camera_follow_plyr =
 		self.aiment = plyr;
 	}
 
+	//stop camera movement
+	self.velocity = '0 0 0'; 	
+	self.avelocity = '0 0 0'; 
+
 	hr_print ("Follow Player Camera");
 
 	//find camera position
 	self.camera_spot = calc_camera_spot (self.aiment);
+
+	//place camera
+	setorigin (self, self.camera_spot);
+	setorigin (self.owner, self.origin);
+	self.lefty = 1;
 
 	//snap camera angles to face aiment
 	camera_snap (self.aiment.origin + self.aiment.view_ofs - self.camera_spot);
 
 	//wait until next frame
 	self.nextthink = time;
-	self.think = camera_follow_setup;
-};
-
-//============================================
-// Setup camera at .camera_spot and run camera
-//============================================
-void() camera_follow_plyr_setup =
-{
-	//place camera
-	setorigin (self, self.camera_spot);
-	setorigin (self.owner, self.origin);
-	self.lefty = 1;
-
-	camera_follow_plyr_think();
+	self.think = camera_follow_plyr_think;
 };
 
 //============================================
@@ -73,8 +69,8 @@ void() camera_follow_plyr_setup =
 //============================================
 void() camera_follow_plyr_think =
 {
-	local vector 	dir;
-	local float 	ideal_speed, speed, aiment_speed;
+	vector 	dir, v;
+	float 	ideal_speed, speed, aiment_speed;
 
 
 	//update camera owners origin
@@ -105,7 +101,6 @@ void() camera_follow_plyr_think =
 		self.last_sight = self.aiment.origin;	
 
 	//find ideal height for camera relative to .aiment velocity
-	local vector v;
 	v_z = 512 - (vlen ((self.aiment.velocity * 0.5)));
 	if (v_z < 64) v_z = 64;
 
@@ -116,10 +111,9 @@ void() camera_follow_plyr_think =
 	}
 
 	//find camera spot
-	local vector pos1;
 	makevectors (self.aiment.angles);
 	traceline (self.aiment.origin, self.aiment.origin + v + v_forward * (v_z * self.lefty), TRUE, self.aiment); //above and behind
-	pos1 = trace_endpos;		
+	vector pos1 = trace_endpos;		
 
 	if ( vlen (self.aiment.origin - pos1) < 32)
 		self.lefty = 0 - self.lefty;
@@ -156,7 +150,7 @@ void() camera_follow_plyr_think =
 			speed = speed + vlen (self.aiment.origin - self.origin);	//aiment not visible, set velocity relative to aiment dist from self
 	}
 
-	camera_update_angles(self.aiment, 1.5);	//update cam angles toward aiment
+	camera_update_angles(1.5);	//update cam angles toward aiment
 
 	dir = normalize (self.camera_spot - self.origin); //calc bearing
 	self.velocity = dir * speed;	//move camera in direction at speed

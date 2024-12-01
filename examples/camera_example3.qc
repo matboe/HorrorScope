@@ -10,7 +10,6 @@
 
 //PROTOTYPES
 void() camera_example3;
-void() camera_example3_setup;
 void() camera_example3_think;
 
 
@@ -19,7 +18,7 @@ void() camera_example3_think;
 //===================================================
 void() camera_example3 =
 {
-	local vector vec;
+	vector vec, vec2;
 
 
 	hr_print ("Example camera 3\n");
@@ -31,30 +30,19 @@ void() camera_example3 =
 	vec = (self.aiment.origin + self.aiment.view_ofs) - self.camera_spot;
 	camera_snap(vec);
 
-	self.nextthink = time;
-	self.think = camera_example3_setup;
-};
-
-//=================================================
-// find a second camera position and move toward it
-//=================================================
-void() camera_example3_setup =
-{
-	local vector	spot2;
-
-
 	self.shot_time = time + 8;	//maximum shot time
 	setorigin (self, self.camera_spot);
 
 	//find second camera spot
-	spot2 = calc_camera_spot (self);
+	vec2 = calc_camera_spot (self);
 
-	//camera bearing / velocity
-	self.velocity = normalize (self.camera_spot, spot2)
+	//move camera bearing x speed
+	self.velocity = normalize (self.camera_spot, vec2);
 	self.velocity = self.velocity * 128;
 
-	//update player
+	//update player position and velocity to match camera
 	setorigin (self.owner, self.origin);	
+	self.owner.velocity = self.velocity;
 
 	camera_example3_think();
 };
@@ -67,13 +55,13 @@ void() camera_example3_setup =
 //==================================================
 void() camera_example3_think =
 {
-	local vector 	cam_dir;
+	vector 	cam_dir;
 
 
 	//update camera angles
-	camera_update_angles(self.aiment, 2);
+	camera_update_angles(2);
 
-	//check switch to next camera
+	//check switch to next camera position
 	if ( !hr_visible(self.aiment.origin) || self.shot_time < time )
 	{
 		//go to next cam position		

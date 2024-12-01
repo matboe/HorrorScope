@@ -7,9 +7,11 @@
  Set camera to fly a stright line between the 2 longest points.
  When camera reaches the end of the flythrough, swap the points and
  flythrough again in the reverse direction.
+ Then move to the next longest points and repeat
 ======================================================================*/
 
 //NEW FIELDS
+.float longest;
 .entity flythrough_ctrl;
 .entity save_ent1;
 .entity save_ent2;
@@ -26,7 +28,7 @@ void() camera_flythrough;
 //===============================================
 float(entity ent1, entity ent2) check_valid_ent =
 {
-	local float pc;
+	float pc;
 
 	
 	pc = pointcontents (ent1.origin + ent1.view_ofs + '0 0 32');
@@ -49,9 +51,6 @@ float(entity ent1, entity ent2) check_valid_ent =
 	if (ent1.classname == "info_teleport_destination")
 		return TRUE;
 
-	//if (ent1.flags & FL_ONGROUND)
-	//	return TRUE;
-
 	return FALSE;
 };
 
@@ -61,11 +60,11 @@ float(entity ent1, entity ent2) check_valid_ent =
 //===================================================
 float() find_longest =
 {
-	local float 	loop;		// number of times through the 2nd while loop
-	local float 	d;		// distance between ent1 and ent2
-	local float	trace;		// count successful traces
-	local entity 	ent1, ent2;	// entites whose distance is being compared
-	local vector 	spot1, spot2;
+	float 	loop;		// number of times through the 2nd while loop
+	float 	d;		// distance between ent1 and ent2
+	float	trace;		// count successful traces
+	entity 	ent1, ent2;	// entites whose distance is being compared
+	vector 	spot1, spot2;
 
 
 	if (self.owner.longest <= 0)
@@ -106,8 +105,8 @@ float() find_longest =
 
 					traceline (spot1, spot2, TRUE, self);			///////////////////////////////////////////////
 					if (trace_fraction == 1)				// Trace both directions (vec1 --> vec2) and //
-						trace = trace + 1;				// (vec2 --> vec1) because items on the      //
-												// ground sometimes see through the floor    //
+						trace = trace + 1;				// (vec2 --> vec1) to be sure theres no geo  //
+												// in the way of the flythru.                //
 					traceline (spot2, spot1, TRUE, self);			///////////////////////////////////////////////
 					if (trace_fraction == 1)
 						trace = trace + 1;
@@ -187,7 +186,7 @@ void() ctrl_think =
 		return;
 	}
 
-//	bprint ("finding longest...\n");
+	hr_print ("finding longest...\n");
 
 	self.nextthink = time;
 	self.think = ctrl_think;
@@ -196,17 +195,19 @@ void() ctrl_think =
 //=================================================================
 // Scrubbing though the edict list repeatedly will cause an 
 // infinite loop error in some source ports. Handle this by 
-// spawning a new entity that will searching the list one
+// spawning a new entity that will search the list one
 // entity at a time for a set number of loops, and then 
-// storing the currently held entity in the edict list (.save_ent).
+// store the currently held entity (.save_ent).
 // In the next frame recover the position in the list by 
-// starting from the stored entity (.save_ent)
+// starting the search beginning with the stored entity (.save_ent)
 //=================================================================
 void() find_flythrough =
 {
+	//already searching for flythoughs 
 	if (self.flythrough_ctrl)
 		return;
 
+	//spawn a new flythrough ctrl
 	self.flythrough_ctrl = spawn();
 	self.flythrough_ctrl.owner = self.owner;
 	self.flythrough_ctrl.nextthink = time;
@@ -241,35 +242,23 @@ void() camera_flythrough_think =
 	self.think = camera_flythrough_think;	
 };
 
-void() remove_tmp =
-{
-	local entity e;
-
-	e = find (world, classname, "tmp");
-	while (e)
-	{
-		remove (e);
-		e = find (e, classname, "tmp");
-	}
-};
 
 //=================================================================
 // Move camera between stored entites longest_ent1 and longest_ent2
 //=================================================================
 void() camera_flythrough =
 {
-	local float	dist;
-	local vector 	dir, spot1, spot2, vec;
+	float	dist;
+	vector 	dir, spot1, spot2, vec;
 
-	remove_tmp();
 
 	set_FOV (90);
 
 	hr_print ("Auto Flythrough camera");
 
 	//print dev info
-	bprint (self.owner.longest_ent1.classname); bprint (" <-- spot1\n");
-	bprint (self.owner.longest_ent2.classname); bprint (" <-- spot2\n");
+	hr_print (self.owner.longest_ent1.classname); hr_print (" <-- spot1\n");
+	hr_print (self.owner.longest_ent2.classname); hr_print (" <-- spot2\n");
 
 	spot1 = self.owner.flythrough_start;
 	spot2 = self.owner.flythrough_end;
@@ -284,11 +273,6 @@ void() camera_flythrough =
 	dir = normalize (vec);
 
 	self.velocity = dir * (dist*0.1);
-
-	bprint (ftos(dist));
-	bprint (" <-- dist\n");
-	bprint (ftos(vlen(self.velocity)));
-	bprint (" <- speed\n");
 
 	//update player
 	setorigin (self.owner, self.origin);	

@@ -5,7 +5,7 @@ version 1.1
 
 This repo contains a compact plugin version of HorrorScope on the fly cameras, as well as camera files and examples.
 The main plugin file for HorrorScope 'hrscope-plugin.qc' defines functions for finding a camera position, casting 
-the players view, moving the camera, returing the player to their original position, handling button pressess, etc. 
+the players view, returing the player to their original position, handling button pressess, etc. 
 The plugin file contains one basic camera function 'camera_default()'.  See /cameras and /examples for more cameras.
 
 Download the complete HorrorScope package which contains plugin, cameras presets, examples, and a demo mod:  

@@ -3,6 +3,8 @@
  FOLLOW CAMERA
 
  Find a camera position in view of .aiment
+ Adjust camera speed (speed x distance for smooth effect)
+ Adjust camera angles each frame to keep .aiment  centered
  Move camera toward .camera_spot until camera is:
 	a) not visible to .camera_spot
  	b) shot time expires
@@ -15,11 +17,10 @@
 
 //PROTOTYPES;
 void() camera_follow;
-void() camera_follow_setup;
 void() camera_follow_think;
 
 //==================================================
-// Find a spot for camera and point camera at aiment
+// Find a position for camera and point at aiment
 //==================================================
 void() camera_follow =
 {
@@ -28,28 +29,15 @@ void() camera_follow =
 	//find camera position
 	self.camera_spot = calc_camera_spot (self.aiment);
 
+	//place camera
+	setorigin (self, self.camera_spot);
+
 	//snap camera angles to face aiment
 	camera_snap(self.aiment.origin + self.aiment.view_ofs - self.camera_spot);
 
-	//wait until next frame
-	self.nextthink = time;
-	self.think = camera_follow_setup;
+	//start camera
+	camera_follow_think();
 };
-
-//============================================
-// Setup camera at .camera_spot and run camera
-//============================================
-void() camera_follow_setup =
-{
-	set_FOV (90);
-
-	//place camera
-	setorigin (self, self.camera_spot);
-	setorigin (self.owner, self.origin);
-
-	camera_follow_think();	
-};
-
 
 //=======================================================
 // Find a position in view of .aiment and move camera
@@ -60,21 +48,22 @@ void() camera_follow_setup =
 //======================================================
 void() camera_follow_think =
 {
-	local vector 	dir;
-	local float 	ideal_speed, speed;
+	vector 	dir;
+	float 	ideal_speed, speed;
 
 
 	//aiment dead
 	if (self.aiment.health <= 0)
 	{
-		self.owner.aiment = world; //static camera will find a new aiment
-		self.nextthink = time + 1;
-		self.think = camera_static;
+		self.owner.aiment = world; //default camera will find a new aiment
+		self.nextthink = time + 2;
+		self.think = camera_default; //reset to default camera
 		return;
 	}
 
-	if (hr_visible (self.aiment.origin) && vlen (self.velocity) > 32 )
-		self.shot_time = time + 1;
+	if (hr_visible (self.aiment.origin))
+		if (vlen (self.velocity) > 32 )
+			self.shot_time = time + 1;
 
 	//camera_spot not visible, shot time expired, or no vector for camera
 	if ( !hr_visible(self.camera_spot) || self.shot_time < time || !self.camera_spot )
@@ -98,20 +87,23 @@ void() camera_follow_think =
 	//calc cam move speed
 	ideal_speed = vlen(self.camera_spot - self.origin) * 0.5;	
 	
+	//increment camera movement speed
 	if (ideal_speed > speed)
-		speed = speed + 2;
+		speed = speed + 2;	
 	else
 		speed = ideal_speed;
 
-
-	dir = normalize (self.camera_spot - self.origin); //calc bearing
- 	self.velocity = dir * speed;	//move camera in direction at speed
-
-	camera_update_angles(self.aiment, 0.9);	//update cam angles toward aiment
-
+	//calc bearing
+	dir = normalize (self.camera_spot - self.origin); 
+	//move camera in direction at speed
+ 	self.velocity = dir * speed;	
+	//update cam angles toward aiment
+	camera_update_angles(0.9);	
+	//store aiments last known position
 	self.last_sight = self.aiment.origin; 
 
-	setorigin (self.owner, self.origin);	//update player
+	//update player position to match camera
+	setorigin (self.owner, self.origin);	
 
 
 	self.nextthink = time;

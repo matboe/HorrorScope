@@ -3,11 +3,20 @@
 version 1.1
 
 
-This is a compact plugin version of HorrorScope Cameras Mod condensed into one .qc file and is designed to be simple to drop 
-into an existing mod to implement TV style cameras.
-There is only one baisc camera included with this condensed version, however you can directly copy & paste code from the cameras and examples section in this repo.
- 
+This repo contains a compact plugin version of HorrorScope on the fly cameras, as well as camera files and examples.
+The main plugin file for HorrorScope 'hrscope-plugin.qc' defines functions for finding a camera position, casting 
+the players view, moving the camera, returing the player to their original position, handling button pressess, etc. 
+The plugin file contains one basic camera function 'camera_default()'.  See /cameras and /examples for more cameras.
+
+Download the complete Horror-Scope package which contains plugin, cameras presets, examples, and a demo mod:  
+https://www.slipseer.com/horrorscope
+
+Video demos of Horrorscope:  
+https://www.youtube.com/@matboe
+    
 Tested with Quakespasm, QSS, Ironwail
+
+
 
 ### To install
 1. Copy 'hrscope-plugin.qc' to your mod source code directory alongside 'weapons.qc'

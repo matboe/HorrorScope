@@ -8,7 +8,7 @@ The main plugin file for HorrorScope 'hrscope-plugin.qc' defines functions for f
 the players view, moving the camera, returing the player to their original position, handling button pressess, etc. 
 The plugin file contains one basic camera function 'camera_default()'.  See /cameras and /examples for more cameras.
 
-Download the complete Horror-Scope package which contains plugin, cameras presets, examples, and a demo mod:  
+Download the complete HorrorScope package which contains plugin, cameras presets, examples, and a demo mod:  
 https://www.slipseer.com/horrorscope
 
 Video demos of Horrorscope:  

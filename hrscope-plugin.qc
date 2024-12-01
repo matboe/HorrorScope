@@ -4,19 +4,21 @@
    ░▒█░▒█░▄▀▀▄░█▀▀▄░█▀▀▄░▄▀▀▄░█▀▀▄░▒█▀▀▀█░█▀▄░▄▀▀▄░▄▀▀▄░█▀▀
    ░▒█▀▀█░█░░█░█▄▄▀░█▄▄▀░█░░█░█▄▄▀░░▀▀▀▄▄░█░░░█░░█░█▄▄█░█▀▀
    ░▒█░▒█░░▀▀░░▀░▀▀░▀░▀▀░░▀▀░░▀░▀▀░▒█▄▄▄█░▀▀▀░░▀▀░░█░░░░▀▀▀
-	- On the fly cameras plugin for Quake mods -
+      - On the fly cameras plugin for Quake mods v1.1  - 
 
  =====================================- by Matboe 2023 -========
 
  [INSTALLATION]
 
-  1) Copy 'hrscope-plugin.qc' to your mod source code directory
-     alongside 'weapons.qc'
+  1) Copy 'hrscope-plugin.qc' and any camera .qc files you want into 
+     your mod source code directory.  Alongside 'weapons.qc'
 
 
   2) Add line to 'progs.src' above 'combat.qc'
+     Also add any camera .qc files here
      --------------------------------------
        hrscope-plugin.qc	//HorrorScope
+       cameras/your_cam.qc	//HorrorScope
      --------------------------------------
 
 
@@ -39,26 +41,37 @@
 
 
  <NOTES>
-  -To execute HorrorScope funciton call 'HorrorScope (camera_name)'.
-  For example:
+  - To execute HorrorScope funciton call 'HorrorScope (camera_name)'.
+    For example:
  
-  if (self.impule == 100)
+    if (self.impule == 100)
 	HorrorScope (camera_example1);
 
-  HorrorScope will run camera_default if none is specified.
+    HorrorScope will run camera_default if none is specified.
 
 
-  -You must specify .aiment! A cameras .aiment is its target 
-  entity, what it will aim at.
-  For example to aim at a Grunt:
+  - You must specify .aiment! A cameras .aiment is its target 
+    entity, what it will aim at.
+    For example to aim at a Grunt:
 
-  self.aiment = find (world, classname, "monster_army");
+    self.aiment = find (world, classname, "monster_army");
  
 
-  -This is the condensed plugin version of HorrorScope.
-  Download the complete package with further instructions
-  and camera examples from:
-  https://www.slipseer.com/horrorscope
+  - You cannot target yourself. To set a player as .aiment you must start 
+    a multiplayer game!
+
+  - This is the main plugin file for HorrorScope.  It contains functions
+    for finding a camera position, casting the players view, moving the
+    camera, returing the player to their original position, handling 
+    button pressess, etc. This file contains one camera function
+    'camera_default()'.  See /cameras and /examples for more cameras.
+
+    Download the complete Horror-Scope package which contains
+    plugin, cameras presets, examples, and a demo mod:
+    https://www.slipseer.com/horrorscope
+
+  - Video demos of Horrorscope
+    https://www.youtube.com/@matboe
 
 =============================================================*/
 
@@ -71,8 +84,8 @@ float SVC_SETVIEWANGLES = 10;
 
 //entity fields
 .float shot_time;			// time until shot expires
-.float last_y_speed;			// store angle movement amount to reference in next frame
-.float last_x_speed;
+.float last_cam_move_y;			// store angle movement amount to reference in next frame
+.float last_cam_move_x;
 .float hr_button_time;			// time between button presses
 .vector hr_oldangles;			// store players angles 
 .vector hr_oldorigin;			// store players origin
@@ -134,16 +147,14 @@ void() hr_frame =
 			Exit_HorrorScope();
 			self.impulse = 0;
 			return;
-		}			
-		else
-		{
-			//store players origin/angles
-			self.hr_oldangles = self.angles;
-			self.hr_oldorigin = self.origin;
+		}		
+	
+		//store players origin/angles
+		self.hr_oldangles = self.angles;
+		self.hr_oldorigin = self.origin;
 
-			//start HorrorScope			
-			HorrorScope (camera_default);
-		}
+		//start HorrorScope			
+		HorrorScope (camera_default);
 	}
 
 	//check button press
@@ -160,7 +171,13 @@ void() hr_frame =
 		}
 
 
-		hr_SetViewPort_Cam ();		//set viewport every frame so player cant look around
+		// set viewport every frame to lock players
+		// view, and prevent fighting against
+		// player control inputs
+		hr_SetViewPort_Cam ();	
+
+		// prevent impulse from recaching change
+		// weapons code
 		self.impulse = 0;
 	}
 };
@@ -186,12 +203,10 @@ float(vector v) hr_visible =
 //======================================================
 float(entity targ) hr_infront =
 {
-	local vector	vec;
-	local float	dot, val;
-	
+	float dot, val;	
 	
 	makevectors (self.angles);
-	vec = normalize (targ.origin + targ.view_ofs - self.origin);
+	vector vec = normalize (targ.origin + targ.view_ofs - self.origin);
 
 	dot = vec * v_forward;
 	
@@ -216,23 +231,16 @@ float(entity targ) hr_infront =
 //======================================
 vector(entity e) calc_camera_spot =
 {
-	local vector 	org, spot, end, tmp;
-	local float	pc, cam_dist;
+	vector 	org, spot, end, tmp;
+	float	pc, cam_dist;
 
 
 	if (e == world)	return e.origin;	//exit or this will cause a loop error later
 
 	org = e.origin;
 
-	pc = CONTENT_SKY;
-
-	while (pc != CONTENT_EMPTY && pc != CONTENT_WATER)	
+	while (pc != CONTENT_EMPTY && pc != CONTENT_WATER && pc != CONTENT_SKY)
 	{
-		//random angle
-		tmp_x = random()*-90 + random()*20;
-		tmp_y = random()*360;	
-		makevectors (tmp);
-
 		//calc cam distance from org
 		cam_dist = HR_MAX_CAM_DIST - HR_MIN_CAM_DIST;
 		cam_dist = HR_MIN_CAM_DIST + (cam_dist * random());
@@ -260,148 +268,106 @@ vector(entity e) calc_camera_spot =
 
 //================================ CAMERA ANGLE ================================
 
-
-//===================================
-// move camera y_angle towards aiment
-//===================================
-void(vector dir, float speed_cap) update_cam_angles_y =
+//=============================
+// update camera avelocity x and y
+// to turn camera towards aiment
+//=============================
+void(float speed_cap) camera_update_angles =
 {
-	local float  current_yaw;	// cameras current y angle
-	local float  ideal;		// where camera should be facing
-	local float  move;		// the amount to shift camera on y axis
-	local float  speed, s; 		// the amount to shift camera increment from last angles shift
+	float  move, speed, ideal, current_yaw, current_pitch;
+	
 
-	dir = normalize(dir);
-	ideal = vectoyaw(dir);
+	vector dir = self.aiment.origin + (self.aiment.view_ofs - self.origin);
+
+
+	///////////////////////
+	// update camera yaw //
+	///////////////////////
+
+	// calc ideal yaw
+	vector vec = normalize(dir);
+	ideal = vectoyaw(vec);
+
 	current_yaw = anglemod( self.angles_y );
 	
-	if (current_yaw == ideal)	//already facing ideal angle
-		return;
-	
-	move = ideal - current_yaw;
+	// already facing aiment
+	if (current_yaw == ideal)
+		self.avelocity_y = 0;
 
-	//turn the shortest distance
-	if (ideal > current_yaw)
-	{
-		if (move > 180)
-			move = move - 360;
-	}
+	// update yaw
 	else
-	{
-		if (move < -180)
-			move = move + 360;
+	{	
+		// amount to move camera yaw
+		move = ideal - current_yaw;
+
+		// turn the shortest distance
+		if (ideal > current_yaw)
+		{	if (move > 180)
+				move = move - 360;
+		}
+		else
+		{	if (move < -180)
+				move = move + 360;
+		}
+
+		// camera angles follows aiment slowly while target is close to center
+		// and speeds up when target is further from center
+		if (move > 20 || move < -20) move = move * 0.3;
+		else move = move * 0.1;
+
+		// cap speed
+		if (move > speed_cap) move = speed_cap;
+
+		move = move * 50;
+		self.avelocity_y = 0.5*(move + self.last_cam_move_y);
+		self.last_cam_move_y = self.avelocity_y;
 	}
 
-	//speed
-	s = move;
-	if (s < 0) 
-		s = s*s;
 
-	s = s * 0.1;
+	/////////////////////////
+	// update camera pitch //
+	/////////////////////////
 
-	if (s > self.last_y_speed + 0.1)
-		s = self.last_y_speed + 0.1;
-
-	if (s > speed_cap) s = speed_cap;
-
-	speed = s;
-	self.last_y_speed = speed;
-
-	if (move > 0)
-	{
-		if (move > speed)
-			move = speed;
-	}
-	else
-	{
-		if (move < 0-speed )
-			move = 0-speed;
-	}
-
-	current_yaw = anglemod (current_yaw + move);
-
-	self.angles_y = current_yaw;
-};
-
-
-//===================================
-// move camera x_angle towards aiment
-//===================================
-void(vector dir, float speed_cap) update_cam_angles_x =
-{
-	local float  current_pitch;	// cameras current x angle
-	local float  ideal;		// where camera should be facing
-	local float  move;		// the amount to shift camera on x axis
-	local float  speed, s; 		// the amount to shift camera increment from last angles shift
-
-	dir = normalize(dir);
-	dir = vectoangles(dir);
-	ideal = dir_x;
+	// calc ideal pitch
+	vec = normalize(dir* -1);
+	vec = vectoangles(vec);
+	ideal = vec_x;
 
 	current_pitch = anglemod( self.angles_x );
 	
+	// already facing aiment
 	if (current_pitch == ideal)
+	{
+		self.avelocity_x = 0;
 		return;
+	}
 	
+	// amount to move camera pitch
 	move = ideal - current_pitch;
 
-	//turn the shortest distance
+	// turn the shortest distance
 	if (ideal > current_pitch)
-	{
-		if (move > 180)
+	{	if (move > 180)
 			move = move - 360;
 	}
 	else
-	{
-		if (move < -180)
+	{	if (move < -180)
 			move = move + 360;
 	}
-	
-	//speed 
-	s = move;
-	if (s < 0) s = s*s;
 
-	s = s * 0.1;
-	
-	if (s > self.last_x_speed + 0.1)
-		s = self.last_x_speed + 0.1;
+	// camera angles follows target slowly while target is close to center
+	// then speeds up when target is further from center
+	if (move > 20 || move < -20) move = move*0.3;
+	else move = move * 0.1;
 
-	if (s > speed_cap) s = speed_cap;
+	// speed cap
+	if (move > speed_cap) move = speed_cap;
 
-	speed = s;
-	self.last_x_speed = speed;
+	move = move * 50;
 
-	if (move > 0)
-	{
-		if (move > speed)
-			move = speed;
-	}
-	else
-	{
-		if (move < 0-speed )
-			move = 0-speed;
-	}
-
-	current_pitch = anglemod (current_pitch + move);
-
-	self.angles_x = current_pitch;
+	self.avelocity_x = 0.5*(move + self.last_cam_move_x);
+	self.last_cam_move_x = self.avelocity_x;
 };
-
-
-//=================================
-// move camera angles toward aiment
-//=================================
-void(entity targ, float speed_cap) camera_update_angles =
-{
-	local vector dir1, dir2;
-
-	dir1 = (targ.origin + targ.view_ofs) - self.origin;
-	dir2 = self.origin - (targ.origin + targ.view_ofs);
-
-	update_cam_angles_y (dir1, speed_cap);
-	update_cam_angles_x (dir2, speed_cap);
-};
-
 
 //================================================
 // set camera angles to instantly center on aiment
@@ -452,8 +418,6 @@ void(float value) set_FOV =
 //=====================
 void() camera_default =
 {	
-	local vector 	vec, cam_pos;
-
 	//find a target to aim camera at
 	if (!self.aiment)
 	{
@@ -462,12 +426,11 @@ void() camera_default =
 	}
 
 	//find a position for camera
-	cam_pos = calc_camera_spot (self.aiment);	
+	vector cam_pos = calc_camera_spot (self.aiment);	
 	setorigin (self, cam_pos);
 
 	//snap camera angles to aiment
-	vec = (self.aiment.origin + self.aiment.view_ofs - cam_pos);
-	camera_snap(vec);
+	camera_snap (self.aiment.origin + self.aiment.view_ofs - cam_pos);
 
 	//update player
 	self.owner.velocity = self.velocity;
@@ -534,6 +497,7 @@ void (void() run_cam) HorrorScope =
 	self.solid = SOLID_NOT;
 	self.movetype = MOVETYPE_NOCLIP;
 	self.view_ofs = '0 0 0';
+	self.velocity = '0 0 0';
 	setsize (self, '0 0 0', '0 0 0');
 	setmodel (self, "");
 	self.flags = self.flags | FL_NOTARGET | FL_GODMODE;
@@ -558,7 +522,7 @@ void (void() run_cam) HorrorScope =
 //========================
 void(string str) hr_print =
 {
-	local entity e;
+	entity e;
 
 
 	if (hr_print_info == FALSE)
